@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blue CarbonChain App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.6.umd.min.js" type="application/javascript"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .mobile-screen { max-width: 420px; height: 880px; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2); width: 42%; border: 1px solid #e5e7eb; }
+        .nav-btn { transition: all 0.2s ease-in-out; }
+        .nav-btn.active { color: #2563EB; transform: scale(1.1); }
+        .wallet-btn.active { background-color: #1D4ED8; color: white; font-weight: 600; }
+        .wallet-btn:not(.active) { background-color: #E0E7FF; color: #312E81; }
+        .page-content { display: none; }
+        .page-content.active { display: flex; flex-direction: column; height: 100%; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { border: 3px solid rgba(0, 0, 0, 0.1); border-left-color: #2563EB; animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="mobile-screen bg-white rounded-3xl overflow-hidden flex flex-col relative">
+        <header class="p-4 border-b flex justify-between items-center bg-gray-50 z-10 shrink-0 h-16" >
+            <h1 id="header-title" class="text-xl font-bold text-gray-800">Home</h1>
+            <div>
+                <button id="header-connect-btn" class="bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg text-sm transition hover:bg-blue-700">Connect</button>
+                <div id="connection-status" class="w-3 h-3 bg-red-500 rounded-full hidden" title="Disconnected"></div>
+            </div>
+        </header>
+
+        <main class="overflow-y-auto" style="height: calc(100% - 64px - 72px);">
+            <div id="page-home" class="page-content p-4 space-y-5">
+                <div class="text-center">
+                    <img src="https://placehold.co/80x80/3B82F6/FFFFFF?text=BCC" alt="Logo" class="rounded-full mx-auto mb-2">
+                    <h2 class="text-2xl font-bold text-gray-800">Blue CarbonChain</h2>
+                    <p class="text-sm text-gray-500 mt-1">Our mission is to bring transparency and trust to the blue carbon market through technology.</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-gray-100 p-3 rounded-lg"><p class="text-xl font-bold text-blue-700">1.2M</p><p class="text-xs text-gray-600">Tokens Minted</p></div>
+                    <div class="bg-gray-100 p-3 rounded-lg"><p class="text-xl font-bold text-yellow-600">850K</p><p class="text-xs text-gray-600">Tokens Traded</p></div>
+                    <div class="bg-gray-100 p-3 rounded-lg"><p class="text-xl font-bold text-red-600">350K</p><p class="text-xs text-gray-600">Tokens Retired</p></div>
+                </div>
+                
+                <div id="home-connect-cta" class="bg-blue-50 border border-blue-200 p-4 rounded-lg text-center">
+                    <h3 class="font-bold text-blue-800">Ready to Trade?</h3>
+                    <p class="text-sm text-blue-700 mt-1">Connect your secure wallet to access the decentralized marketplace.</p>
+                    <button id="home-cta-connect-btn" class="mt-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition hover:bg-blue-700">Connect Wallet</button>
+                </div>
+                <div id="home-wallet-info" class="hidden bg-green-50 border border-green-200 p-4 rounded-lg">
+                     <p class="font-bold text-green-800 text-center">Wallet Connected</p>
+                     <p id="home-wallet-address" class="font-mono text-xs break-all text-center text-green-700 mt-1"></p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-lg mb-2">Featured Projects</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg border"><img src="https://placehold.co/60x60/3B82F6/FFFFFF?text=SD" class="rounded-md mr-3"><div class="flex-grow"> <p class="font-semibold">Sundarbans Delta Restoration</p><p class="text-xs text-gray-500">50,000 Credits Minted</p></div></div>
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg border"><img src="https://placehold.co/60x60/10B981/FFFFFF?text=GC" class="rounded-md mr-3"><div class="flex-grow"><p class="font-semibold">Goa Coastal Initiative</p><p class="text-xs text-gray-500">25,000 Credits Minted</p></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="page-trading" class="page-content">
+                 <div class="p-4 space-y-4 flex-grow flex flex-col">
+                    <div id="trading-gate" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-center">
+                        <p class="font-bold">View-Only Mode</p>
+                        <p class="text-sm">Please <button id="gate-connect-btn" class="underline font-semibold">connect your wallet</button> to enable trading.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div><h2 class="text-sm font-semibold text-gray-600 mb-2">Select Active Wallet</h2><div class="grid grid-cols-2 gap-2"><button id="wallet1-btn" class="wallet-btn p-2 rounded-lg text-sm transition-colors">Project/Admin</button><button id="wallet2-btn" class="wallet-btn p-2 rounded-lg text-sm transition-colors">Corporate Buyer</button></div></div><div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg text-sm space-y-1"><div class="flex justify-between items-center"><span class="font-medium text-gray-600">Wallet:</span> <span id="active-wallet-address" class="font-mono text-xs bg-indigo-100 p-1 rounded">Not Connected</span></div><div class="flex justify-between items-center"><span class="font-medium text-gray-600">MATIC:</span> <span id="matic-balance" class="font-semibold text-gray-800">0.00</span></div><div class="flex justify-between items-center"><span class="font-medium text-gray-600">Credits (ID 1):</span> <span id="credit-balance" class="font-semibold text-indigo-700">0</span></div></div><div class="space-y-4"><div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-center mb-2">1. Mint Credits (Admin)</h3><div class="space-y-2"><input type="number" id="mint-id" placeholder="Project ID (e.g., 1)" class="w-full p-2 border rounded-md text-sm"><input type="number" id="mint-amount" placeholder="Amount (e.g., 10000)" class="w-full p-2 border rounded-md text-sm"><input type="text" id="mint-uri" placeholder="Metadata URI (e.g., ipfs://...)" class="w-full p-2 border rounded-md text-sm"><button id="mint-btn" disabled class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed">Mint Credits</button></div></div><div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-center mb-2">2. Transfer Credits (Trade)</h3><div class="space-y-2"><input type="text" id="transfer-to" placeholder="Recipient Address" class="w-full p-2 border rounded-md text-sm"><input type="number" id="transfer-id" placeholder="Project ID (e.g., 1)" class="w-full p-2 border rounded-md text-sm"><input type="number" id="transfer-amount" placeholder="Amount (e.g., 500)" class="w-full p-2 border rounded-md text-sm"><button id="transfer-btn" disabled class="w-full bg-yellow-500 text-white font-semibold py-2 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed">Transfer Credits</button></div></div><div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-center mb-2">3. Retire Credits (Offset)</h3><div class="space-y-2"><input type="number" id="retire-id" placeholder="Project ID (e.g., 1)" class="w-full p-2 border rounded-md text-sm"><input type="number" id="retire-amount" placeholder="Amount (e.g., 100)" class="w-full p-2 border rounded-md text-sm"><button id="retire-btn" disabled class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed">Retire Credits</button></div></div></div>
+                        <div id="activity-log-container" class="mt-4 h-24 bg-gray-800 text-white p-2 flex flex-col rounded-lg"><h3 class="text-xs font-semibold mb-1 border-b border-gray-600">Activity Log</h3><div id="activity-log" class="flex-grow overflow-y-auto text-xs font-mono space-y-1"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-claim" class="page-content p-4 space-y-4">
+                <div class="flex-grow"><h3 class="font-bold text-lg text-center">Submit Project Data for Verification</h3><p class="text-sm text-gray-500 text-center">Fill in the details below to mint new carbon credits for your project.</p><div class="space-y-3 mt-4"><input type="text" placeholder="Project Name (e.g., Sundarbans Delta)" class="w-full p-3 border rounded-md text-sm"><input type="text" placeholder="Project Location (Lat, Long)" class="w-full p-3 border rounded-md text-sm"><textarea placeholder="Brief Project Description..." rows="3" class="w-full p-3 border rounded-md text-sm"></textarea><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"><p class="text-3xl mb-2">📸</p><p class="font-semibold text-gray-700">Upload Photographic Evidence</p><p class="text-xs text-gray-500">Drone imagery, site photos, etc.</p><button class="mt-2 text-sm bg-gray-200 px-3 py-1 rounded-md">Browse Files</button></div><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"><p class="text-3xl mb-2">📍</p><p class="font-semibold text-gray-700">Upload Geolocation Data</p><p class="text-xs text-gray-500">.kml, .gpx, or other GIS files</p><button class="mt-2 text-sm bg-gray-200 px-3 py-1 rounded-md">Browse Files</button></div></div></div><button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shrink-0">Submit for Verification</button>
+            </div>
+            
+            <div id="page-profile" class="page-content p-4">
+                <div class="flex-grow space-y-6"><div class="text-center"><div class="w-24 h-24 bg-indigo-100 rounded-full mx-auto flex items-center justify-center text-4xl mb-3">🌱</div><h3 class="font-bold text-xl">Green Future NGO</h3><p class="font-mono text-xs text-gray-500 break-all" id="profile-wallet-address">Not Connected</p></div><div><h4 class="font-semibold text-gray-600 mb-2">My Projects</h4><ul class="space-y-2"><li class="p-3 bg-gray-50 rounded-lg">Sundarbans Delta Restoration</li><li class="p-3 bg-gray-50 rounded-lg">Goa Coastal Mangroves</li></ul></div><div><h4 class="font-semibold text-gray-600 mb-2">Settings</h4><div class="bg-gray-50 rounded-lg divide-y"><div class="p-3 flex justify-between items-center"><p>Email Notifications</p><div class="w-12 h-6 bg-green-500 rounded-full p-1 flex items-center"><div class="w-4 h-4 bg-white rounded-full ml-auto"></div></div></div><div class="p-3 flex justify-between items-center"><p>Push Notifications</p><div class="w-12 h-6 bg-gray-300 rounded-full p-1 flex items-center"><div class="w-4 h-4 bg-white rounded-full"></div></div></div></div></div></div><button class="w-full text-red-600 font-semibold py-3 rounded-xl hover:bg-red-50 transition shrink-0">Disconnect Wallet</button>
+            </div>
+        </main>
+
+        <footer class="absolute bottom-0 left-0 w-full border-t bg-gray-50 grid grid-cols-4 text-center h-[72px]">
+            <button id="nav-home" class="nav-btn p-3 text-gray-500 active" onclick="showPage('page-home', 'Home')"><span class="text-2xl">🏠</span><span class="block text-xs">Home</span></button>
+            <button id="nav-trading" class="nav-btn p-3 text-gray-500" onclick="showPage('page-trading', 'Trading')"><span class="text-2xl">🔄</span><span class="block text-xs">Trading</span></button>
+            <button id="nav-claim" class="nav-btn p-3 text-gray-500" onclick="showPage('page-claim', 'Claim Credits')"><span class="text-2xl">⬆️</span><span class="block text-xs">Claim</span></button>
+            <button id="nav-profile" class="nav-btn p-3 text-gray-500" onclick="showPage('page-profile', 'Profile')"><span class="text-2xl">👤</span><span class="block text-xs">Profile</span></button>
+        </footer>
+
+        <div id="loading-overlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"><div class="spinner w-12 h-12 rounded-full"></div></div>
+    </div>
+
+    <script>
+        const contractAddress = "0x4E7405d003A8f0e8cC194976a45998A2f7072561";
+        const contractABI = [ "function mintCredits(address account, uint256 tokenId, uint256 amount, string memory tokenURI) public", "function retireCredits(address account, uint256 tokenId, uint256 amount) public", "function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data) public", "function balanceOf(address account, uint256 id) view returns (uint256)" ];
+        
+        const allPages = document.querySelectorAll('.page-content');
+        const allNavButtons = document.querySelectorAll('.nav-btn');
+        const headerConnectBtn = document.getElementById('header-connect-btn');
+        const gateConnectBtn = document.getElementById('gate-connect-btn');
+        const homeCtaConnectBtn = document.getElementById('home-cta-connect-btn');
+        const headerTitle = document.getElementById('header-title');
+        const connectionStatus = document.getElementById('connection-status');
+        const tradingGate = document.getElementById('trading-gate');
+        const homeConnectCta = document.getElementById('home-connect-cta');
+        const homeWalletInfo = document.getElementById('home-wallet-info');
+        const wallet1Btn = document.getElementById('wallet1-btn');
+        const wallet2Btn = document.getElementById('wallet2-btn');
+        const activeWalletAddrEl = document.getElementById('active-wallet-address');
+        const maticBalanceEl = document.getElementById('matic-balance');
+        const creditBalanceEl = document.getElementById('credit-balance');
+        const homeWalletAddressEl = document.getElementById('home-wallet-address');
+        const profileWalletAddressEl = document.getElementById('profile-wallet-address');
+        const mintBtn = document.getElementById('mint-btn');
+        const transferBtn = document.getElementById('transfer-btn');
+        const retireBtn = document.getElementById('retire-btn');
+        const activityLog = document.getElementById('activity-log');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const transferToInput = document.getElementById('transfer-to');
+
+        let provider, contract;
+        let wallet1Signer, wallet2Signer, activeSigner;
+        let wallet1Address, wallet2Address, activeWalletAddress;
+        let isConnected = false;
+
+        // --- SCRIPT RESTORED FROM HERE ---
+
+        function showPage(pageId, title) {
+            allPages.forEach(page => page.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            targetPage.classList.add('active');
+
+            allNavButtons.forEach(btn => btn.classList.remove('active'));
+            let navId = pageId.split('-')[1];
+            document.getElementById(`nav-${navId}`).classList.add('active');
+            
+            headerTitle.textContent = title;
+            document.querySelector('main').scrollTop = 0;
+
+            if (pageId === 'page-trading' && !isConnected) {
+                tradingGate.style.display = 'flex'; // This should be a flex container
+            } else if (pageId === 'page-trading' && isConnected) {
+                tradingGate.style.display = 'none';
+            }
+        }
+
+        async function connectWallets() {
+            if (typeof window.ethereum === 'undefined') return alert("MetaMask is not installed!");
+            try {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                if (accounts.length < 2) return alert("Error: Please create at least two accounts in MetaMask for this demo.");
+                
+                wallet1Address = accounts[0];
+                wallet2Address = accounts[1];
+                wallet1Signer = provider.getSigner(0);
+                wallet2Signer = provider.getSigner(1);
+
+                isConnected = true;
+                headerConnectBtn.style.display = 'none';
+                connectionStatus.style.display = 'block';
+                connectionStatus.classList.replace('bg-red-500', 'bg-green-500');
+                
+                homeConnectCta.style.display = 'none';
+                homeWalletInfo.style.display = 'block';
+                homeWalletAddressEl.textContent = wallet1Address;
+                profileWalletAddressEl.textContent = wallet1Address;
+                transferToInput.value = wallet2Address;
+                
+                mintBtn.disabled = false;
+                transferBtn.disabled = false;
+                retireBtn.disabled = false;
+
+                switchWallet(1);
+                const currentPageId = document.querySelector('.page-content.active').id;
+                const currentTitle = headerTitle.textContent;
+                showPage(currentPageId, currentTitle);
+
+            } catch (error) {
+                alert(`Connection failed: ${error.message}`);
+            }
+        }
+
+        function switchWallet(walletNumber) {
+            if (!isConnected) return;
+            if (walletNumber === 1) {
+                activeSigner = wallet1Signer;
+                activeWalletAddress = wallet1Address;
+                wallet1Btn.classList.add('active');
+                wallet2Btn.classList.remove('active');
+            } else {
+                activeSigner = wallet2Signer;
+                activeWalletAddress = wallet2Address;
+                wallet2Btn.classList.add('active');
+                wallet1Btn.classList.remove('active');
+            }
+            contract = new ethers.Contract(contractAddress, contractABI, activeSigner);
+            activeWalletAddrEl.textContent = `${activeWalletAddress.substring(0, 6)}...${activeWalletAddress.substring(38)}`;
+            if(activityLog) logActivity(`Switched to Wallet ${walletNumber} (${walletNumber === 1 ? 'Admin' : 'Buyer'}).`);
+            updateBalances();
+        }
+
+        async function updateBalances() {
+            if (!provider || !activeWalletAddress) return;
+            try {
+                const maticBal = await provider.getBalance(activeWalletAddress);
+                maticBalanceEl.textContent = `${parseFloat(ethers.utils.formatEther(maticBal)).toFixed(4)} MATIC`;
+                const creditId = document.getElementById('mint-id').value || 1;
+                const creditBal = await contract.balanceOf(activeWalletAddress, creditId);
+                creditBalanceEl.textContent = creditBal.toString();
+            } catch (err) { creditBalanceEl.textContent = "Error"; }
+        }
+        
+        async function mintCredits() {
+            if (!isConnected) return alert('Please connect your wallet first.');
+            const tokenId = document.getElementById('mint-id').value;
+            const amount = document.getElementById('mint-amount').value;
+            const uri = document.getElementById('mint-uri').value;
+            if (!tokenId || !amount || !uri || parseInt(amount) <= 0) return alert('Please fill all fields with a positive amount.');
+            logActivity(`Minting ${amount} credits (ID: ${tokenId})...`);
+            showLoading(true);
+            try {
+                const tx = await contract.mintCredits(activeWalletAddress, tokenId, amount, uri);
+                await tx.wait();
+                logActivity("Minting successful!");
+                updateBalances();
+            } catch (err) { logActivity(`Minting failed: ${err.reason || err.message}`, true); } 
+            finally { showLoading(false); }
+        }
+
+        async function transferCredits() {
+            if (!isConnected) return alert('Please connect your wallet first.');
+            const to = document.getElementById('transfer-to').value;
+            const id = document.getElementById('transfer-id').value;
+            const amount = document.getElementById('transfer-amount').value;
+            if (!to || !id || !amount || parseInt(amount) <= 0) return alert('Please fill all fields with a positive amount.');
+            logActivity(`Transferring ${amount} credits...`);
+            showLoading(true);
+            try {
+                const tx = await contract.safeTransferFrom(activeWalletAddress, to, id, amount, "0x");
+                await tx.wait();
+                logActivity("Transfer successful!");
+                updateBalances();
+            } catch (err) { logActivity(`Transfer failed: ${err.reason || err.message}`, true); }
+            finally { showLoading(false); }
+        }
+        
+        async function retireCredits() {
+            if (!isConnected) return alert('Please connect your wallet first.');
+            const id = document.getElementById('retire-id').value;
+            const amount = document.getElementById('retire-amount').value;
+            if (!id || !amount || parseInt(amount) <= 0) return alert('Please fill all fields with a positive amount.');
+            logActivity(`Retiring ${amount} credits (ID: ${id})...`);
+            showLoading(true);
+            try {
+                const tx = await contract.retireCredits(activeWalletAddress, id, amount);
+                await tx.wait();
+                logActivity("Retirement successful!");
+                updateBalances();
+            } catch (err) { logActivity(`Retiring failed: ${err.reason || err.message}`, true); }
+            finally { showLoading(false); }
+        }
+
+        function logActivity(message, isError = false) {
+            if(!activityLog) return;
+            const logEntry = document.createElement('div');
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            logEntry.innerHTML = `<span class="text-gray-500">${time}:</span> <span class="${isError ? 'text-red-400' : 'text-green-300'}">${message}</span>`;
+            activityLog.appendChild(logEntry);
+            activityLog.scrollTop = activityLog.scrollHeight;
+        }
+
+        function showLoading(isLoading) { loadingOverlay.style.display = isLoading ? 'flex' : 'none'; }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('page-home', 'Home');
+        });
+
+        headerConnectBtn.addEventListener('click', connectWallets);
+        gateConnectBtn.addEventListener('click', connectWallets);
+        homeCtaConnectBtn.addEventListener('click', connectWallets);
+        wallet1Btn.addEventListener('click', () => switchWallet(1));
+        wallet2Btn.addEventListener('click', () => switchWallet(2));
+        mintBtn.addEventListener('click', mintCredits);
+        transferBtn.addEventListener('click', transferCredits);
+        retireBtn.addEventListener('click', retireCredits);
+    </script>
+</body>
+</html>
